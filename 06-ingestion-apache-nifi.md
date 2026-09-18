@@ -114,8 +114,36 @@ Monitor the startup logs (NiFi takes ~60-90 seconds to unpack Java bundles on fi
 ```bash
 kubectl logs -n data-platform -l app=nifi -f
 ```
+
 *Wait until you see: `NiFi has started. The UI is available at...`*
 
+Fix Issues
+
+```bash
+kubectl patch deployment nifi -n data-platform --type='json' -p='[{"op":"remove","path":"/spec/template/spec/containers/0/volumeMounts/0"},{"op":"remove","path":"/spec/template/spec/volumes/0"}]'
+```
+
+```bash
+sudo chown -R 1000:1000 /opt/data-platform/nifi
+```
+
+```bash
+kubectl set env deployment/nifi -n data-platform \
+  NIFI_WEB_HTTPS_HOST=nifi.local \
+  NIFI_WEB_PROXY_HOST=nifi.local:30880
+```
+
+```bash
+kubectl set env deployment/nifi -n data-platform NIFI_WEB_HTTPS_HOST=0.0.0.0
+```
+
+```bash
+kubectl rollout restart deployment nifi -n data-platform
+```
+
+```bash
+kubectl get pods -n data-platform -w
+```
 ---
 
 ## 🌐 Step 2: Access the NiFi Web Canvas
