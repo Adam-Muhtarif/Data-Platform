@@ -128,6 +128,18 @@ MinIO provides an S3 API endpoint (port `9000`) and a rich Web Console (port `90
 Create `minio.yaml`:
 
 ```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-credentials
+  namespace: data-platform
+type: Opaque
+stringData:
+  MINIO_ROOT_USER: "admin"
+  MINIO_ROOT_PASSWORD: "117470908Aa1!"
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -144,38 +156,73 @@ spec:
         app: minio
     spec:
       containers:
-      - name: minio
-        image: minio/minio:RELEASE.2024-05-10T01-41-38Z
-        command:
-        - /bin/sh
-        - -c
-        - minio server /data --console-address :9001
-        env:
-        - name: MINIO_ROOT_USER
-          value: "admin"
-        - name: MINIO_ROOT_PASSWORD
-          value: "password123"
-        ports:
-        - containerPort: 9000
-          name: s3-api
-        - containerPort: 9001
-          name: web-console
-        resources:
-          requests:
-            memory: "150Mi"
-            cpu: "100m"
-          limits:
-            memory: "350Mi"
-            cpu: "1000m"
-        volumeMounts:
-        - name: minio-data
-          mountPath: /data
+        - name: minio
+          image: quay.io/minio/minio:latest
+
+          command:
+            - /bin/sh
+            - -c
+            - minio server /data --console-address :9001
+
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: MINIO_ROOT_USER
+
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: MINIO_ROOT_PASSWORD
+
+          ports:
+            - name: s3-api
+              containerPort: 9000
+
+            - name: web-console
+              containerPort: 9001
+
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "25m"
+
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
+
+          volumeMounts:
+            - name: minio-data
+              mountPath: /data
+
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+
       volumes:
-      - name: minio-data
-        hostPath:
-          path: /opt/data-platform/minio
-          type: DirectoryOrCreate
+        - name: minio-data
+          hostPath:
+            path: /opt/data-platform/minio
+            type: DirectoryOrCreate
+
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -183,15 +230,18 @@ metadata:
   namespace: data-platform
 spec:
   type: NodePort
+
   ports:
-  - port: 9000
-    targetPort: 9000
-    name: api
-    nodePort: 30900
-  - port: 9001
-    targetPort: 9001
-    name: console
-    nodePort: 30901
+    - name: api
+      port: 9000
+      targetPort: 9000
+      nodePort: 30900
+
+    - name: console
+      port: 9001
+      targetPort: 9001
+      nodePort: 30901
+
   selector:
     app: minio
 ```

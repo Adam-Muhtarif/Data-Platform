@@ -33,8 +33,8 @@ In an enterprise data platform, microservices and NiFi produce JSON or Avro even
 
 ## 🚀 Step 1: Deploy Kafka (KRaft Mode), Schema Registry & Kafka UI
 
-### Manifest: `kafka-stack.yaml`
-Create `kafka-stack.yaml`:
+### Manifest: `kafka.yaml`
+Create `kafka.yaml`:
 
 ```yaml
 apiVersion: apps/v1
@@ -53,45 +53,46 @@ spec:
         app: kafka
     spec:
       containers:
-      - name: kafka
-        image: apache/kafka:3.7.0
-        env:
-        - name: KAFKA_NODE_ID
-          value: "1"
-        - name: KAFKA_PROCESS_ROLES
-          value: "broker,controller"
-        - name: KAFKA_LISTENERS
-          value: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
-        - name: KAFKA_ADVERTISED_LISTENERS
-          value: "PLAINTEXT://kafka:9092"
-        - name: KAFKA_CONTROLLER_LISTENER_NAMES
-          value: "CONTROLLER"
-        - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-          value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
-        - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-          value: "1@kafka:9093"
-        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-          value: "1"
-        - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
-          value: "1"
-        - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
-          value: "1"
-        - name: KAFKA_LOG_DIRS
-          value: "/tmp/kraft-combined-logs"
-        - name: KAFKA_CLUSTER_ID
-          value: "MkU3OEVBNTcwNTJENDM2Qk"
-        - name: KAFKA_JVM_PERFORMANCE_OPTS
-          value: "-Xmx512m -Xms256m"
-        ports:
-        - containerPort: 9092
-          name: broker
-        resources:
-          requests:
-            memory: "350Mi"
-            cpu: "200m"
-          limits:
-            memory: "750Mi"
-            cpu: "1000m"
+        - name: kafka
+          image: apache/kafka:3.7.0
+          env:
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_PROCESS_ROLES
+              value: "broker,controller"
+            - name: KAFKA_LISTENERS
+              value: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://kafka:9092"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: "1@kafka:9093"
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+              value: "1"
+            - name: KAFKA_LOG_DIRS
+              value: "/tmp/kraft-combined-logs"
+            - name: KAFKA_CLUSTER_ID
+              value: "MkU3OEVBNTcwNTJENDM2Qk"
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xms128m -Xmx256m"
+          ports:
+            - name: broker
+              containerPort: 9092
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
 ---
 apiVersion: v1
 kind: Service
@@ -100,66 +101,17 @@ metadata:
   namespace: data-platform
 spec:
   type: ClusterIP
-  ports:
-  - port: 9092
-    targetPort: 9092
-    name: broker
   selector:
     app: kafka
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: schema-registry
-  namespace: data-platform
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: schema-registry
-  template:
-    metadata:
-      labels:
-        app: schema-registry
-    spec:
-      containers:
-      - name: schema-registry
-        image: confluentinc/cp-schema-registry:7.6.1
-        env:
-        - name: SCHEMA_REGISTRY_HOST_NAME
-          value: "schema-registry"
-        - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
-          value: "PLAINTEXT://kafka:9092"
-        - name: SCHEMA_REGISTRY_LISTENERS
-          value: "http://0.0.0.0:8081"
-        - name: SCHEMA_REGISTRY_HEAP_OPTS
-          value: "-Xmx256m -Xms128m"
-        ports:
-        - containerPort: 8081
-          name: api
-        resources:
-          requests:
-            memory: "200Mi"
-            cpu: "100m"
-          limits:
-            memory: "350Mi"
-            cpu: "500m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: schema-registry
-  namespace: data-platform
-spec:
-  type: NodePort
   ports:
-  - port: 8081
-    targetPort: 8081
-    name: api
-    nodePort: 30081
-  selector:
-    app: schema-registry
----
+    - name: broker
+      port: 9092
+      targetPort: 9092
+```
+
+Create `kafka-ui.yaml`:
+
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -176,27 +128,28 @@ spec:
         app: kafka-ui
     spec:
       containers:
-      - name: kafka-ui
-        image: provectuslabs/kafka-ui:latest
-        env:
-        - name: KAFKA_CLUSTERS_0_NAME
-          value: "local-lakehouse"
-        - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
-          value: "kafka:9092"
-        - name: KAFKA_CLUSTERS_0_SCHEMAREGISTRY
-          value: "http://schema-registry:8081"
-        - name: JAVA_OPTS
-          value: "-Xmx256m -Xms128m"
-        ports:
-        - containerPort: 8080
-          name: web
-        resources:
-          requests:
-            memory: "150Mi"
-            cpu: "100m"
-          limits:
-            memory: "350Mi"
-            cpu: "500m"
+        - name: kafka-ui
+          image: provectuslabs/kafka-ui:latest
+          env:
+            - name: KAFKA_CLUSTERS_0_NAME
+              value: "local-lakehouse"
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: "kafka:9092"
+            - name: KAFKA_CLUSTERS_0_SCHEMAREGISTRY
+              value: "http://schema-registry:8081"
+            - name: JAVA_OPTS
+              value: "-Xms64m -Xmx128m"
+          ports:
+            - name: web
+              containerPort: 8080
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+
 ---
 apiVersion: v1
 kind: Service
@@ -205,13 +158,71 @@ metadata:
   namespace: data-platform
 spec:
   type: NodePort
-  ports:
-  - port: 8080
-    targetPort: 8080
-    name: web
-    nodePort: 30082
   selector:
     app: kafka-ui
+  ports:
+    - name: web
+      port: 8080
+      targetPort: 8080
+      nodePort: 30082
+```
+
+Create `schema-registry.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schema-registry
+  namespace: data-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: schema-registry
+  template:
+    metadata:
+      labels:
+        app: schema-registry
+    spec:
+      containers:
+        - name: schema-registry
+          image: confluentinc/cp-schema-registry:7.6.1
+          env:
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              value: "schema-registry"
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: "PLAINTEXT://kafka:9092"
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: "http://0.0.0.0:8081"
+            - name: SCHEMA_REGISTRY_HEAP_OPTS
+              value: "-Xms128m -Xmx256m"
+          ports:
+            - name: api
+              containerPort: 8081
+          resources:
+            requests:
+              memory: "192Mi"
+              cpu: "50m"
+            limits:
+              memory: "384Mi"
+              cpu: "300m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: schema-registry
+  namespace: data-platform
+spec:
+  type: NodePort
+  selector:
+    app: schema-registry
+  ports:
+    - name: api
+      port: 8081
+      targetPort: 8081
+      nodePort: 30081
 ```
 
 Apply this manifest:
@@ -222,6 +233,17 @@ kubectl apply -f kafka-stack.yaml
 Check the pods status:
 ```bash
 kubectl get pods -n data-platform -l 'app in (kafka, schema-registry, kafka-ui)'
+```
+
+fix issues with 
+```bash
+  kubectl patch svc kafka -n data-platform --type='json' -p='[
+    {"op":"add","path":"/spec/ports/-","value":{"name":"controller","port":9093,"targetPort":9093,"protocol":"TCP"}}
+  ]'
+```
+
+```bash
+  kubectl rollout restart deployment kafka -n data-platform
 ```
 
 ---
