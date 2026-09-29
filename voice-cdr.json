@@ -1,0 +1,105 @@
+{
+  "type": "record",
+  "name": "VoiceCDR",
+  "namespace": "com.telesom.cdr",
+  "fields": [
+    {
+      "name": "cdr_id",
+      "type": "string"
+    },
+    {
+      "name": "cdr_type",
+      "type": "string"
+    },
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "create_date",
+      "type": "string"
+    },
+    {
+      "name": "start_date",
+      "type": "string"
+    },
+    {
+      "name": "end_date",
+      "type": "string"
+    },
+    {
+      "name": "pri_identity",
+      "type": "string"
+    },
+    {
+      "name": "actual_usage",
+      "type": "string"
+    },
+    {
+      "name": "callingpartynumber",
+      "type": "string"
+    },
+    {
+      "name": "calledpartynumber",
+      "type": "string"
+    },
+    {
+      "name": "callingpartyimsi",
+      "type": "string"
+    },
+    {
+      "name": "calledpartyimsi",
+      "type": "string"
+    },
+    {
+      "name": "dialednumber",
+      "type": "string"
+    },
+    {
+      "name": "callingcellid",
+      "type": "string"
+    },
+    {
+      "name": "chargingtime",
+      "type": "string"
+    },
+    {
+      "name": "waitduration",
+      "type": "string"
+    },
+    {
+      "name": "callreferencenumber",
+      "type": "string"
+    },
+    {
+      "name": "imei",
+      "type": "string"
+    },
+    {
+      "name": "mscaddress",
+      "type": "string"
+    },
+    {
+      "name": "record_date",
+      "type": [
+        "null",
+        {
+          "type": "int",
+          "logicalType": "date"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "load_date",
+      "type": [
+        "null",
+        {
+          "type": "long",
+          "logicalType": "timestamp-micros"
+        }
+      ],
+      "default": null
+    }
+  ]
+}
