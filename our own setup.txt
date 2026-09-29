@@ -1,0 +1,40 @@
+nifi  https://169.58.218.71:31443/nifi
+	samo-admin
+	SamoNiFiPassword2026!
+
+minio Object Console   http://169.58.218.71:30901
+ 	samo-admin
+ 	SamoSecureMinioPass2026!
+ 	
+ 	
+MinIO S3 API Endpoint  http://169.58.218.71:30900
+	samo-admin
+	SamoSecureMinioPass2026!
+	
+	
+AKHQ (Kafka Web UI)   http://localhost:8080
+
+
+Kafka Bootstrap
+	169.58.218.71:32010 (Internal: samo-cluster-kafka-bootstrap.samo.svc:9092)
+	
+metadata db psql name samo_polaris
+	username: samo_polaris
+	pass: cHMKJDQMmQ4ZnIii
+	ccess-key='samo-admin'
+	secret-key='SamoSecureMinioPass2026!'
+	10.0.0.8:5432 | SSH Tunnel: localhost:5433
+	user psql : postgres
+	pass psql : cHMKJDQMmQ4ZnIii
+	
+Generated app password
+	xbme kdpa goak ixni
+
+GitLab Instance (Low-Resource CE)
+	Web Ingress: http://gitlab.transcode.com (or https://gitlab.transcode.com)
+	Web Direct NodePort: http://169.58.218.71:30088
+	Cluster Internal DNS: http://gitlab.gitlab.svc.cluster.local
+	SSH Git Port: 169.58.218.71:32222 (e.g. ssh://git@169.58.218.71:32222/lab/lakehouse-pipelines.git)
+	Admin User: root
+	Admin Password: SamoGitLab2026!
+	Initial Repository: http://169.58.218.71:30088/lab/lakehouse-pipelines.git
