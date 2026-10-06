@@ -1,0 +1,30 @@
+expose nifi crendentials: 
+kubectl get secret single-user-credentials -n nifi -o yaml
+
+
+nifi
+	nifikop
+		nifikopnifikopnifikop
+		NewStrongPassword123!
+	
+
+nifi : admin	
+pas : 	Finance2026##
+
+mino : minio
+pass : minio123
+
+
+ahmeds
+Admin@123
+
+
+freeipa
+	admin
+	ADMPassword1
+	
+
+airflow
+	admin
+	admin
+	

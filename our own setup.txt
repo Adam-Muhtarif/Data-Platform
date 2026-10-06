@@ -30,11 +30,13 @@ metadata db psql name samo_polaris
 Generated app password
 	xbme kdpa goak ixni
 
-GitLab Instance (Low-Resource CE)
-	Web Ingress: http://gitlab.transcode.com (or https://gitlab.transcode.com)
-	Web Direct NodePort: http://169.58.218.71:30088
-	Cluster Internal DNS: http://gitlab.gitlab.svc.cluster.local
-	SSH Git Port: 169.58.218.71:32222 (e.g. ssh://git@169.58.218.71:32222/lab/lakehouse-pipelines.git)
-	Admin User: root
-	Admin Password: SamoGitLab2026!
-	Initial Repository: http://169.58.218.71:30088/lab/lakehouse-pipelines.git
+
+
+Component	Discovery Details
+GitLab Server	Hosted at https://vmi3540858.contaboserver.net
+Airflow Repo	https://vmi3540858.contaboserver.net/bigdata/airflow.git (branch main)
+GitLab Token Status	The token in Kubernetes secret airflow-gitlab-credentials (glpat-Deng...) expired/was revoked, resulting in HTTP 401/403 authentication failures when cloning.
+Airflow Trino Provider	The base image was missing apache-airflow-providers-trino and trino, which is why the Trino connection type was missing and earlier DAGs (data_compaction_cdrs.py) had import errors.
+Trino Internal K8s Host	The Kubernetes service is trino.trino.svc.cluster.local:8080 (not trino-coordinator).
+
+
